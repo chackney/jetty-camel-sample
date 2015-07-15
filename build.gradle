@@ -1,0 +1,82 @@
+apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'application'
+apply plugin: 'pmd'
+apply plugin: 'checkstyle'
+
+// Properties for module - create the properties needed
+group = 'com.rmg'
+
+version = '1.2.2-RC2-SNAPSHOT'
+
+description = """Test Project For Mucking about"""
+
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
+
+mainClassName = "org.muckingabout.Application"
+
+repositories {
+    maven { url "http://10.66.1.56:8081/artifactory/libs-release" }
+    maven { url "http://10.66.1.56:8081/artifactory/libs-snapshot" }
+}
+
+configurations {
+    compile.exclude(module: 'spring-boot-starter-tomcat')
+    compile.exclude(module: 'mockito-all')
+}
+
+dependencies {
+    compile (group: 'org.apache.camel', name: 'camel-spring-boot', version: '2.15.0')
+    compile (group: 'org.springframework.boot' , name: 'spring-boot-starter-jetty', version: '1.1.9.RELEASE')
+    compile group: 'org.apache.camel', name: 'camel', version: '2.15.0'
+    compile group: 'org.apache.camel', name: 'camel-servlet', version: '2.15.0'
+    compile group: 'org.apache.camel', name: 'camel-jetty9', version: '2.15.0'
+    compile group: 'com.rmg', name: 'barcode-xsd', version:'1.0.0-RC1'
+    compile group: 'com.barcodelib', name: 'barcode', version:'1.0.0'
+    compile group: 'com.netflix.hystrix', name: 'hystrix-core', version:'1.3.16'
+    compile group: 'com.netflix.hystrix', name: 'hystrix-metrics-event-stream', version:'1.3.16'
+    compile group: 'com.rmg.camel', name: 'camel-shared-library', version: '1.7.24'
+
+    testCompile group: 'com.rmg.maven', name: 'rmg-camel-test-dependencies-pom', version:'1.1.1'
+    testCompile(group: 'com.jayway.restassured', name: 'rest-assured', version:'2.3.4') {
+        exclude(module: 'groovy')
+    }
+    testCompile group: 'org.codehaus.groovy', name: 'groovy-all', version:'2.3.4'
+    testCompile group: 'com.google.zxing', name: 'core', version:'3.2.0'
+    testCompile group: 'com.google.zxing', name: 'javase', version:'3.2.0'
+    testCompile group: 'org.mockito', name: 'mockito-all', version:'1.9.5'
+    testCompile( group: 'org.springframework.boot', name: 'spring-boot-starter-test', version:'1.1.9.RELEASE')
+
+}
+
+jar {
+    manifest {
+        attributes 'Main-Class': mainClassName
+    }
+}
+
+checkstyle {
+    configFile = new File ('./src/main/resources/not_packaged_in_archive/rmg-checkstyle.xml')
+    configProperties.'suppressions.file' = new File('src/main/resources/not_packaged_in_archive/rmg-checkstyle-suppressions.xml')
+    ignoreFailures = true;
+}
+
+// Override/Custom tasks
+test {
+    useJUnit {
+        includeCategories 'com.rmg.camel.test.AcceptanceTest'
+        includeCategories 'com.rmg.camel.test.UnitTest'
+        excludeCategories 'com.rmg.camel.test.IntegrationTest'
+    }
+}
+
+task integrationTests(type: Test) {
+    useJUnit {
+        includeCategories 'com.rmg.camel.test.IntegrationTest'
+    }
+}
+
+// Build order
+jar.dependsOn pmdMain
+jar.dependsOn checkstyleMain
