@@ -4,13 +4,13 @@ import org.apache.camel.builder.RouteBuilder;
 import org.muckingabout.serviceactivator.MyReallyDodgyServiceCommand;
 
 /**
- * Created by CLHACKNE on 14/07/2015.
+ * @author chackney
  */
 public class HystrixRoute extends RouteBuilder{
 
     @Override
     public void configure() throws Exception {
-        from("servlet://muckingAbout/dodgyService?servletName=camelHttpTransportServlet")
+        from("servlet://other/dodgyService?servletName=CamelServlet")
                 .routeId("dodgyRoute")
                 .bean(new HystrixBean())
                 .convertBodyTo(String.class)

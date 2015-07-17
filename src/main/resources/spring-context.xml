@@ -12,6 +12,8 @@
 
     <bean name="helloWorldRoute" class="org.muckingabout.routes.HelloWorldRoot" />
     <bean name="dodgyRoute" class="org.muckingabout.routes.HystrixRoute" />
+    <bean name="restRoute" class="org.muckingabout.routes.RestRoute" />
+
 
     <!-- Declare a Camel context -->
     <!-- By defining this in a Spring XML file, Camel uses the ApplicationContextRegistry by default -->
@@ -19,6 +21,7 @@
         <!-- Routes -->
         <camel:routeBuilder ref="helloWorldRoute"/>
         <camel:routeBuilder ref="dodgyRoute" />
+        <camel:routeBuilder ref="restRoute" />
     </camel:camelContext>
 
     <bean name="hystrixServlet" class="com.netflix.hystrix.contrib.metrics.eventstream.HystrixMetricsStreamServlet" />
@@ -28,11 +31,51 @@
     </bean>
 
 
-    <bean name="camelHttpTransportServlet" class="org.apache.camel.component.servlet.CamelHttpTransportServlet" />
-    <bean name="camelServletRegistrationBean" class="org.springframework.boot.context.embedded.ServletRegistrationBean" >
-        <constructor-arg name="servlet" ref="camelHttpTransportServlet" />
-        <constructor-arg name="urlMappings" value="/*" />
+    <!-- This is the one that runs the Rest Services -->
+    <bean name="camelServlet" class="org.apache.camel.component.servlet.CamelHttpTransportServlet" />
+    <bean name="camelRestResgistration" class="org.springframework.boot.context.embedded.ServletRegistrationBean" >
+        <constructor-arg name="servlet" ref="camelServlet" />
+        <constructor-arg name="urlMappings">
+            <list>
+                    <value type="java.lang.String">/rest/*</value>
+            </list>
+        </constructor-arg>
+        <property name="name" value="CamelServlet" /><!-- Name has to be CamelServlet - No way to change it in the rest dsl (or not that I could find :)) -->
     </bean>
 
-    <context:component-scan base-package="org.muckingabout"  />
+
+
+    <!-- Swagger API -->
+    <bean name="apiServlet" class="org.apache.camel.component.swagger.DefaultCamelSwaggerServlet"  />
+
+    <bean name="apiServletRegistrationBean" class="org.springframework.boot.context.embedded.ServletRegistrationBean" >
+        <constructor-arg name="servlet" ref="apiServlet" />
+        <constructor-arg name="urlMappings" value="/api/*" />
+        <property name="initParameters">
+            <map>
+                <entry key="base.path" value="rest" />
+                <entry key="api.path" value="api" />
+                <entry key="api.version" value="0.1" />
+                <entry key="api.title" value="Basic Pet Store" />
+                <entry key="api.description" value="Get your lovely pets here" />
+
+
+            </map>
+        </property>
+    </bean>
+
+    <bean name="restSwaggerCorsFilter" class="org.apache.camel.component.swagger.RestSwaggerCorsFilter"  />
+
+    <bean name="swaggerFilterRegistrationBean" class="org.springframework.boot.context.embedded.FilterRegistrationBean" >
+        <constructor-arg name="filter" ref="restSwaggerCorsFilter" />
+        <constructor-arg name="servletRegistrationBeans" >
+            <list>
+                <ref bean="apiServletRegistrationBean" />
+                <ref bean="camelRestResgistration" />
+            </list>
+        </constructor-arg>
+    </bean>
+
+    <!-- the uer service, there is not need for this to be a spring bean, could easliy just be a camel one -->
+    <bean name="petService" class="org.muckingabout.serviceactivator.PetService" />
 </beans>
