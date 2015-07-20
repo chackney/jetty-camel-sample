@@ -12,6 +12,7 @@ import org.eclipse.jetty.jmx.MBeanContainer;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.FilterMapping;
+import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.muckingabout.routes.HelloWorldRoot;
@@ -28,11 +29,8 @@ public class Application {
         public static void main( String[] args ) throws Exception
         {
 
-            // Create a basic jetty server object that will listen on port 8080.
-            // Note that if you set this to port 0 then a randomly available port
-            // will be assigned that you can either look in the logs for the port,
-            // or programmatically obtain it for use in test cases.
             Server server = new Server(8080);
+
 
             // Setup JMX
             MBeanContainer mbContainer = new MBeanContainer(
@@ -55,8 +53,8 @@ public class Application {
             apiServlet.setName("apiServlet");
             apiServlet.setServlet(new DefaultCamelSwaggerServlet());
 
-            apiServlet.setInitParameter("base.path","http://localhost:8080/");
-            apiServlet.setInitParameter("api.path","http://localhost:8080/api" );
+            apiServlet.setInitParameter("base.path","rest");
+            apiServlet.setInitParameter("api.path","api" );
             apiServlet.setInitParameter("api.version","0.1" );
             apiServlet.setInitParameter("api.title","Basic Pet Store");
             apiServlet.setInitParameter("api.description","Get your lovely pets here");
@@ -73,9 +71,10 @@ public class Application {
             servletHandler.addFilter(filterHolder,filterMapping);
             // A WebAppContext is a ContextHandler as well so it needs to be set to
             // the server so it is aware of where to send the appropriate requests.
-            server.setHandler(servletHandler);
-
-
+            ServletContextHandler context = new ServletContextHandler();
+            context.setContextPath("/");
+            context.setServletHandler(servletHandler);
+            server.setHandler(context);
 
             // create a Main instance
             Main main = new Main();
