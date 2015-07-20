@@ -3,7 +3,7 @@
 ## To Run:
 gradle run (starts jetty and camel)
 
-## There are 2 services presented:
+## The following services are present
 * http://localhost:8080/HelloWorld
 
   Prints Hello World to the console
@@ -15,5 +15,11 @@ gradle run (starts jetty and camel)
 * To view the hystrix serlvet output
 
   curl http://localhost:8080/hystrix.stream
+
+  (this won't start until the dodgyService above has been hit at least once')
+
+* To view the swagger api, load swagger, and point it at the following url
+
+ curl http://localhost:8080/api
 
 thats it.
