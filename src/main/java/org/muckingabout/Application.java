@@ -59,12 +59,12 @@ public class Application {
             apiServlet.setInitParameter("api.title","Basic Pet Store");
             apiServlet.setInitParameter("api.description","Get your lovely pets here");
 
-            servletHandler.addServletWithMapping(apiServlet,"/api");
+            servletHandler.addServletWithMapping(apiServlet,"/api/*");
             FilterHolder filterHolder = new FilterHolder();
             filterHolder.setName("restSwaggerCorsFilter");
             filterHolder.setFilter(new RestSwaggerCorsFilter());
 
-            String [] filterPaths = {"/api","/rest/*"} ;
+            String [] filterPaths = {"/api/*","/rest/*"} ;
             FilterMapping filterMapping = new FilterMapping();
             filterMapping.setPathSpecs(filterPaths);
             filterMapping.setFilterName("restSwaggerCorsFilter");
