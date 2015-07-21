@@ -13,65 +13,102 @@ import org.muckingabout.routes.HelloWorldRoot;
 import org.muckingabout.routes.HystrixRoute;
 import org.muckingabout.routes.RestRoute;
 import org.muckingabout.serviceactivator.PetService;
+import org.muckingabout.serviceactivator.stub.PetServiceStub;
 
 /**
- *
  * @author chackey
  */
 public class Application {
 
+    /**
+     * The server were using
+     * Again in future change this to factory/discovery method then
+     * update this.
+     */
+    HttpServerWrapper server = new JettyServerImpl(8080);
+    // create a Main Camel instance
+    Main main = new Main();
 
+    public Application() {
+    }
 
+    public void configureWebServer() {
+        this.server.addServlet("CamelServlet", "/rest/*", new CamelHttpTransportServlet(), null);
+        this.server.addServlet("HystrixServlet", "/hystrix.stream/*", new HystrixMetricsStreamServlet(), null);
+        this.server.addServlet("apiServlet", "/api/*", new DefaultCamelSwaggerServlet(), createSwaggerServletinitConfig());
+        String[] paths = {"/api/*", "/rest/*"};
+        this.server.addFilter("restSwaggerCorsFilter", new RestSwaggerCorsFilter(), paths);
+    }
 
-        public static void main( String[] args ) throws Exception
-        {
+    public void configureCamel () {
+        // enable hangup support so you can press ctrl + c to terminate the JVM
+        this.main.enableHangupSupport();
+        // bind petService into the registery - Basic Dependancy Injection
+        // basic profile selection :)
+        String profile = System.getProperty("profile");
+        if("stub".equals(profile)) {
+            profileStub();
+        } else {
+            profileLive();
+        }
+        // add routes
+        this.main.addRouteBuilder(new HelloWorldRoot());
+        this.main.addRouteBuilder(new HystrixRoute());
+        this.main.addRouteBuilder(new RestRoute());
+    }
 
-           /**
-             * The server were using
-             * Again in future change this to factory/discovery method then
-             * update this.
-             */
-            HttpServerWrapper server = new JettyServerImpl(8080);
-            // create a Main Camel instance
-            Main main = new Main();
-            try {
-
-                server.addServlet("CamelServlet", "/rest/*", new CamelHttpTransportServlet(), null);
-                server.addServlet("HystrixServlet", "/hystrix.stream/*", new HystrixMetricsStreamServlet(), null);
-                server.addServlet("apiServlet", "/api/*", new DefaultCamelSwaggerServlet(), createSwaggerServletinitConfig());
-                String [] paths = {"/api/*", "/rest/*"};
-                server.addFilter("restSwaggerCorsFilter", new RestSwaggerCorsFilter(),paths );
-
-
-                // enable hangup support so you can press ctrl + c to terminate the JVM
-                main.enableHangupSupport();
-                // bind petService into the registery - Basic Dependancy Injection
-                main.bind("petService", new PetService());
-                // add routes
-                main.addRouteBuilder(new HelloWorldRoot());
-                main.addRouteBuilder(new HystrixRoute());
-                main.addRouteBuilder(new RestRoute());
-
-                // Start camel
-                main.start();
-                while (!main.isStarted()) {
-                    Thread.sleep(10);
-                }
-                // Start things up! - this also blocks
-                server.startServer();
-            }
-            catch (Exception ex) {
-                ex.printStackTrace();
-            }
-            finally {
-                server.stopServer();
-                main.stop();
-            }
-
+    public void startCamel() throws Exception {
+        // Start camel
+        this.main.start();
+        while (!main.isStarted()) {
+            Thread.sleep(10);
         }
 
+    }
+    public void startWebServer() throws Exception{
+        this.server.startServer();
 
-    private static Map<String,String> createSwaggerServletinitConfig() {
+    }
+
+    public void block() throws Exception {
+        server.block();
+    }
+
+    public void shutdown() throws Exception{
+        this.server.stopServer();
+        this.main.stop();
+    }
+
+    public static void main(String[] args) throws Exception {
+
+        Application application = new Application();
+        try {
+            application.configureWebServer();
+            application.configureCamel();
+            application.startCamel();
+            application.startWebServer();
+            application.block();
+       } catch (Exception ex) {
+            ex.printStackTrace();
+        } finally {
+            application.shutdown();
+        }
+
+    }
+
+    /**
+     * These should get moved, as you add more beans
+     * you'll need something a bit more elegant :)
+     */
+    private void profileStub() {
+        this.main.bind("petService", new PetServiceStub());
+    }
+
+    private void profileLive() {
+        this.main.bind("petService", new PetService());
+    }
+
+    private static Map<String, String> createSwaggerServletinitConfig() {
 
         HashMap configParameters = new HashMap();
 
@@ -83,10 +120,6 @@ public class Application {
 
         return configParameters;
     }
-
-
-
-
 
 
 }

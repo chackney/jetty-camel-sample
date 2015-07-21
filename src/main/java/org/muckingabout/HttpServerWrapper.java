@@ -12,8 +12,10 @@ import java.util.Map;
  *
  */
 public interface HttpServerWrapper {
-    public void startServer() throws Exception;
-    public void stopServer() throws Exception;
-    public  void addServlet(String servletName, String path, HttpServlet httpServlet, Map<String,String> initConfig);
-    public  void addFilter(String filterName, Filter httpFilter, String [] paths);
+    void startServer() throws Exception;
+    void stopServer() throws Exception;
+    void addServlet(String servletName, String path, HttpServlet httpServlet, Map<String,String> initConfig);
+    void addFilter(String filterName, Filter httpFilter, String [] paths);
+
+    void block() throws Exception;
 }

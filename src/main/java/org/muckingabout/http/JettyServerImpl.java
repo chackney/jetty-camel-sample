@@ -15,7 +15,7 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.muckingabout.HttpServerWrapper;
 
 /**
- * Created by CLHACKNE on 20/07/2015.
+ * @author chackney
  */
 public class JettyServerImpl implements HttpServerWrapper {
 
@@ -36,7 +36,7 @@ public class JettyServerImpl implements HttpServerWrapper {
         ServletContextHandler context = createServeltContext(this.servletHandler);
         server.setHandler(context);
         server.start();
-        server.join();
+
     }
 
     @Override
@@ -75,10 +75,15 @@ public class JettyServerImpl implements HttpServerWrapper {
         servletHandler.addFilter(filterHolder,filterMapping);
     }
 
+    public void block() throws Exception{
+        server.join();
+    }
     private void addJMX(Server server) {
         // Setup JMX
         MBeanContainer mbContainer = new MBeanContainer(
                 ManagementFactory.getPlatformMBeanServer());
         server.addBean(mbContainer);
     }
+
+
 }

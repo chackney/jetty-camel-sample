@@ -33,9 +33,11 @@ dependencies {
     compile group: 'org.apache.camel', name: 'camel-jetty9', version: '2.15.0'
     compile group: 'org.apache.camel', name: 'camel-swagger', version: '2.15.0'
     compile group: 'org.apache.camel', name: 'camel-jackson', version: '2.15.0'
+    compile group: 'org.apache.camel', name: 'camel-test', version: '2.15.0'
     compile group: 'com.netflix.hystrix', name: 'hystrix-core', version:'1.3.16'
     compile group: 'com.netflix.hystrix', name: 'hystrix-metrics-event-stream', version:'1.3.16'
     compile group: 'org.slf4j', name: 'slf4j-simple', version:'1.7.12'
+    compile group: 'com.jayway.restassured', name: 'rest-assured', version:'2.3.4'
 }
 
 jar {
@@ -53,15 +55,14 @@ checkstyle {
 // Override/Custom tasks
 test {
     useJUnit {
-        includeCategories 'com.rmg.camel.test.AcceptanceTest'
-        includeCategories 'com.rmg.camel.test.UnitTest'
-        excludeCategories 'com.rmg.camel.test.IntegrationTest'
+        includeCategories 'org.muckingabout.testClasses.AcceptanceTest'
+        excludeCategories 'org.muckingabout.testClasses.IntegrationTest'
     }
 }
 
 task integrationTests(type: Test) {
     useJUnit {
-        includeCategories 'com.rmg.camel.test.IntegrationTest'
+        includeCategories 'org.muckingabout.testClasses.IntegrationTest'
     }
 }
 
