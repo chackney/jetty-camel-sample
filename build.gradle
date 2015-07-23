@@ -4,10 +4,11 @@ apply plugin: 'application'
 apply plugin: 'pmd'
 apply plugin: 'checkstyle'
 
+
 // Properties for module - create the properties needed
 group = 'org.muckingabout'
 
-version = '0.0.00000001-SNAPSHOT'
+version = '0.1-SNAPSHOT'
 
 description = """Test Project For Mucking about"""
 
@@ -22,15 +23,14 @@ repositories {
 }
 
 configurations {
-    compile.exclude(module: 'spring-boot-starter-tomcat')
     compile.exclude(module: 'mockito-all')
 }
 
 dependencies {
-    compile (group: 'org.apache.camel', name: 'camel-spring-boot', version: '2.15.0' )
     compile group: 'org.apache.camel', name: 'camel', version: '2.15.0'
     compile group: 'org.apache.camel', name: 'camel-servlet', version: '2.15.0'
     compile group: 'org.apache.camel', name: 'camel-jetty9', version: '2.15.0'
+    compile group: 'org.apache.camel', name: 'camel-netty-http', version: '2.15.0'
     compile group: 'org.apache.camel', name: 'camel-swagger', version: '2.15.0'
     compile group: 'org.apache.camel', name: 'camel-jackson', version: '2.15.0'
     compile group: 'org.apache.camel', name: 'camel-test', version: '2.15.0'
@@ -42,14 +42,17 @@ dependencies {
 
 jar {
     manifest {
-        attributes 'Main-Class': mainClassName
+        attributes "Main-Class": "$mainClassName"
     }
 }
 
-checkstyle {
-    configFile = new File ('./src/main/resources/not_packaged_in_archive/rmg-checkstyle.xml')
-    configProperties.'suppressions.file' = new File('src/main/resources/not_packaged_in_archive/rmg-checkstyle-suppressions.xml')
-    ignoreFailures = true;
+task fatJar(type: Jar) {
+    manifest {
+        attributes 'Main-Class': "org.muckingabout.Application"
+    }
+    baseName = project.name + '-all'
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
 }
 
 // Override/Custom tasks
@@ -66,6 +69,3 @@ task integrationTests(type: Test) {
     }
 }
 
-// Build order
-jar.dependsOn pmdMain
-jar.dependsOn checkstyleMain
